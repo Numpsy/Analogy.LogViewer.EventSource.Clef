@@ -1,4 +1,11 @@
-﻿using System;
+﻿using Analogy.Interfaces;
+using Analogy.LogViewer.Serilog;
+using Microsoft.Diagnostics.Tracing;
+using Microsoft.Diagnostics.Tracing.Session;
+using Newtonsoft.Json;
+using Serilog.Formatting;
+using Serilog.Formatting.Display;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Globalization;
@@ -6,14 +13,9 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Analogy.Interfaces;
-using Analogy.LogViewer.Serilog;
-using Analogy.LogViewer.Serilog.CompactClef;
-using Microsoft.Diagnostics.Tracing;
-using Microsoft.Diagnostics.Tracing.Session;
-using Newtonsoft.Json;
-using Serilog.Formatting;
-using Serilog.Formatting.Display;
+using Analogy.LogViewer.Serilog.DataTypes;
+using Newtonsoft.Json.Linq;
+using Serilog.Events;
 
 namespace Analogy.LogViewer.EventSource.Clef
 {
@@ -21,13 +23,15 @@ namespace Analogy.LogViewer.EventSource.Clef
     {
         // No files to handle?
         IAnalogyOfflineDataProvider IAnalogyRealTimeDataProvider.FileOperationsHandler { get; }
+        public Image ConnectedLargeImage { get; set; }
+        public Image ConnectedSmallImage { get; set; }
+        public Image DisconnectedLargeImage { get; set; }
+        public Image DisconnectedSmallImage { get; set; }
 
-        // Use a hard coded GUID for now (currently no need for it to be configurable).
-        private readonly Guid providerId = new Guid("82E677CB-6C2C-4ED9-AE6F-BD68D465D0B2");
-        Guid IAnalogyDataProvider.ID => providerId;
+        public Guid Id { get; set; } = new Guid("82E677CB-6C2C-4ED9-AE6F-BD68D465D0B2");
 
         // simple fixed display name string.
-        string IAnalogyDataProvider.OptionalTitle => "Clef EventSource";
+        string IAnalogyDataProvider.OptionalTitle { get; set; }= "Clef EventSource";
 
         // We don't use any custom colours.
         bool IAnalogyDataProvider.UseCustomColors { get; set; } = false;
@@ -71,7 +75,7 @@ namespace Analogy.LogViewer.EventSource.Clef
         private TraceEventSession traceEventSession;
         private ITextFormatter textFormatter;
 
-        void IAnalogyRealTimeDataProvider.StartReceiving()
+        Task IAnalogyRealTimeDataProvider.StartReceiving()
         {
             if (!(TraceEventSession.IsElevated() ?? false))
             {
@@ -87,7 +91,7 @@ namespace Analogy.LogViewer.EventSource.Clef
                     Text = "Process must be run as admin in order to view EventSource events",
                 };
 
-                OnMessageReady?.Invoke(this, new AnalogyLogMessageArgs(m, Environment.MachineName, string.Empty, providerId));
+                OnMessageReady?.Invoke(this, new AnalogyLogMessageArgs(m, Environment.MachineName, string.Empty, Id));
 
             }
             else
@@ -107,9 +111,8 @@ namespace Analogy.LogViewer.EventSource.Clef
                 {
                     // get the JSON payload
                     var clefPayload = (string)data.PayloadByName("clefPayload");
-
                     // parse it (TODO:: Error handling!)
-                    var logEvent = LogEventReader.ReadFromString(clefPayload, serializer.Value);
+                    var logEvent = ReadFromString(clefPayload, serializer.Value);
                     var logMessage = CommonParser.ParseLogEventProperties(logEvent);
 
                     // format the message text
@@ -130,22 +133,24 @@ namespace Analogy.LogViewer.EventSource.Clef
                     if (string.IsNullOrEmpty(logMessage.Module))
                         logMessage.Module = data.ProcessName;
 
-                    OnMessageReady?.Invoke(this, new AnalogyLogMessageArgs(logMessage, string.Empty, "Clef EventSource", providerId));
+                    OnMessageReady?.Invoke(this, new AnalogyLogMessageArgs(logMessage, string.Empty, "Clef EventSource", Id));
                 });
 
                 // @@TBD@@ Store this in case we need extra clean-up on it later?
                 Task.Run(() => traceEventSession.Source.Process());
             }
+            return Task.CompletedTask;
         }
 
         // Tidy up the TraceEventSession on shutdown, or it can be left around after the viewer has gone away.
-        void IAnalogyRealTimeDataProvider.StopReceiving()
+        Task IAnalogyRealTimeDataProvider.StopReceiving()
         {
             traceEventSession?.Source?.StopProcessing();
             traceEventSession?.Dispose();
             traceEventSession = null;
 
-            OnDisconnected?.Invoke(this, new AnalogyDataSourceDisconnectedArgs("user disconnected", Environment.MachineName, providerId));
+            OnDisconnected?.Invoke(this, new AnalogyDataSourceDisconnectedArgs("user disconnected", Environment.MachineName, Id));
+            return Task.CompletedTask;
         }
 
         static JsonSerializer CreateSerializer()
@@ -156,5 +161,14 @@ namespace Analogy.LogViewer.EventSource.Clef
                 Culture = CultureInfo.InvariantCulture
             });
         }
+        public LogEvent ReadFromString(string document, JsonSerializer serializer = null)
+        {
+            if (document == null) throw new ArgumentNullException(nameof(document));
+            serializer = serializer ?? CreateSerializer();
+            var jObject = serializer.Deserialize<JObject>(new JsonTextReader(new StringReader(document)));
+            return LogEventReader.ReadFromJObject(jObject, new JsonFormatMessageFields());
+
+        }
+
     }
 }
