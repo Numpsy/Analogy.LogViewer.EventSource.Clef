@@ -167,7 +167,7 @@ namespace Analogy.LogViewer.EventSource.Clef
             using var jsonReader = new JsonTextReader(new StringReader(document));
             var jObject = serializer.Deserialize<JObject>(jsonReader);
 
-            return LogEventReader.ReadFromJObject(jObject, new JsonFormatMessageFields());
+            return LogEventReader.ReadFromJObject(jObject, new CompactJsonFormatMessageFields());
         }
     }
 }
