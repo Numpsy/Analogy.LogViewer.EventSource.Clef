@@ -22,11 +22,11 @@ namespace Analogy.LogViewer.EventSource.Clef
     class EventSourceDataProvider : IAnalogyRealTimeDataProvider
     {
         // No files to handle?
-        IAnalogyOfflineDataProvider IAnalogyRealTimeDataProvider.FileOperationsHandler { get; }
-        public Image ConnectedLargeImage { get; set; }
-        public Image ConnectedSmallImage { get; set; }
-        public Image DisconnectedLargeImage { get; set; }
-        public Image DisconnectedSmallImage { get; set; }
+        IAnalogyOfflineDataProvider? IAnalogyRealTimeDataProvider.FileOperationsHandler { get; }
+        public Image? ConnectedLargeImage { get; set; }
+        public Image? ConnectedSmallImage { get; set; }
+        public Image? DisconnectedLargeImage { get; set; }
+        public Image? DisconnectedSmallImage { get; set; }
 
         public Guid Id { get; set; } = new Guid("82E677CB-6C2C-4ED9-AE6F-BD68D465D0B2");
 
@@ -37,9 +37,9 @@ namespace Analogy.LogViewer.EventSource.Clef
         bool IAnalogyDataProvider.UseCustomColors { get; set; }
 
         // Events - these are managed by the host app.
-        public event EventHandler<AnalogyDataSourceDisconnectedArgs> OnDisconnected;
-        public event EventHandler<AnalogyLogMessageArgs> OnMessageReady;
-        public event EventHandler<AnalogyLogMessagesArgs> OnManyMessagesReady;
+        public event EventHandler<AnalogyDataSourceDisconnectedArgs>? OnDisconnected;
+        public event EventHandler<AnalogyLogMessageArgs>? OnMessageReady;
+        public event EventHandler<AnalogyLogMessagesArgs>? OnManyMessagesReady;
 
         // We could possibly return false here if we aren't running elevated, but rather than doing that
         // we'll start up and then report an error from StartReceiving()
@@ -55,7 +55,7 @@ namespace Analogy.LogViewer.EventSource.Clef
         IEnumerable<(string originalHeader, string replacementHeader)> IAnalogyDataProvider.GetReplacementHeaders() => Enumerable.Empty<(string originalHeader, string replacementHeader)>();
 
         // For logging
-        private IAnalogyLogger Logger { get; set; }
+        private IAnalogyLogger? Logger { get; set; }
 
         // Create and reuse a single deserializer.
         private readonly Lazy<JsonSerializer> serializer = new Lazy<JsonSerializer>(() => CreateSerializer(), LazyThreadSafetyMode.None);
@@ -72,8 +72,8 @@ namespace Analogy.LogViewer.EventSource.Clef
         {
         }
 
-        private TraceEventSession traceEventSession;
-        private ITextFormatter textFormatter;
+        private TraceEventSession? traceEventSession;
+        private ITextFormatter? textFormatter;
 
         Task IAnalogyRealTimeDataProvider.StartReceiving()
         {
@@ -162,11 +162,11 @@ namespace Analogy.LogViewer.EventSource.Clef
             });
         }
 
-        public static LogEvent ReadFromString(string document, JsonSerializer serializer = null)
+        static LogEvent ReadFromString(string document, JsonSerializer serializer)
         {
-            if (document == null) throw new ArgumentNullException(nameof(document));
-            serializer = serializer ?? CreateSerializer();
-            var jObject = serializer.Deserialize<JObject>(new JsonTextReader(new StringReader(document)));
+            using var jsonReader = new JsonTextReader(new StringReader(document));
+            var jObject = serializer.Deserialize<JObject>(jsonReader);
+
             return LogEventReader.ReadFromJObject(jObject, new JsonFormatMessageFields());
         }
     }

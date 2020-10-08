@@ -9,7 +9,12 @@
 		<GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
 	</PropertyGroup>
 
-	<ItemGroup>
+  <PropertyGroup>
+    <LangVersion>8.0</LangVersion>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
 		<PackageReference Include="Analogy.LogViewer.Interfaces" Version="2.7.3" />
 		<PackageReference Include="Analogy.LogViewer.Serilog" Version="2.0.1" />
 		<PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="3.3.0">
