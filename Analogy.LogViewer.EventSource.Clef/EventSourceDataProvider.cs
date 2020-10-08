@@ -34,7 +34,7 @@ namespace Analogy.LogViewer.EventSource.Clef
         string IAnalogyDataProvider.OptionalTitle { get; set; }= "Clef EventSource";
 
         // We don't use any custom colours.
-        bool IAnalogyDataProvider.UseCustomColors { get; set; } = false;
+        bool IAnalogyDataProvider.UseCustomColors { get; set; }
 
         // Events - these are managed by the host app.
         public event EventHandler<AnalogyDataSourceDisconnectedArgs> OnDisconnected;
@@ -161,14 +161,13 @@ namespace Analogy.LogViewer.EventSource.Clef
                 Culture = CultureInfo.InvariantCulture
             });
         }
-        public LogEvent ReadFromString(string document, JsonSerializer serializer = null)
+
+        public static LogEvent ReadFromString(string document, JsonSerializer serializer = null)
         {
             if (document == null) throw new ArgumentNullException(nameof(document));
             serializer = serializer ?? CreateSerializer();
             var jObject = serializer.Deserialize<JObject>(new JsonTextReader(new StringReader(document)));
             return LogEventReader.ReadFromJObject(jObject, new JsonFormatMessageFields());
-
         }
-
     }
 }

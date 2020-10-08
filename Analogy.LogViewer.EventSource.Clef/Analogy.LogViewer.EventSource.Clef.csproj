@@ -12,6 +12,10 @@
 	<ItemGroup>
 		<PackageReference Include="Analogy.LogViewer.Interfaces" Version="2.7.3" />
 		<PackageReference Include="Analogy.LogViewer.Serilog" Version="2.0.1" />
+		<PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="3.3.0">
+		  <PrivateAssets>all</PrivateAssets>
+		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
 		<PackageReference Include="Microsoft.Diagnostics.Tracing.TraceEvent" Version="2.0.61" />
 		<PackageReference Include="System.Resources.Extensions" Version="4.6.0" />
 	</ItemGroup>
