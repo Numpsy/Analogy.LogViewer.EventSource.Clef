@@ -10,18 +10,16 @@ namespace Analogy.LogViewer.EventSource.Clef
     public class EventSourceFactory : IAnalogyFactory
     {
         internal static Guid Id = new Guid("508DFDE0-3BFC-4407-8A62-4965E472F497");
-        public Guid FactoryId { get; set; } = Id;
 
-        public string Title { get; set; } = "Clef EventSource Provider";
-
+        Guid IAnalogyFactory.FactoryId { get; set; } = Id;
+        string IAnalogyFactory.Title { get; set; } = "Clef EventSource Provider";
         public IEnumerable<IAnalogyChangeLog> ChangeLog { get; set; } = new List<AnalogyChangeLog>
         {
             new AnalogyChangeLog("First version", AnalogChangeLogType.None, "First version", new DateTime(2020, 08, 21))
         };
-
-        public Image LargeImage { get; set; } = Resources.Serilog_icon32x32;
-        public Image SmallImage { get; set; } = Resources.Serilog_icon;
-        public IEnumerable<string> Contributors { get; set; } = new List<string> { "Richard Webb" };
-        public string About { get; set; } = "Clef EventSource Provider";
+        Image? IAnalogyFactory.LargeImage { get; set; } = Resources.Serilog_icon32x32;
+        Image? IAnalogyFactory.SmallImage { get; set; } = Resources.Serilog_icon;
+        IEnumerable<string> IAnalogyFactory.Contributors { get; set; } = new List<string> { "Richard Webb" };
+        string IAnalogyFactory.About { get; set; } = "Clef EventSource Provider";
     }
 }

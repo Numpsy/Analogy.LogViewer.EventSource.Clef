@@ -31,7 +31,7 @@ namespace Analogy.LogViewer.EventSource.Clef
         public Guid Id { get; set; } = new Guid("82E677CB-6C2C-4ED9-AE6F-BD68D465D0B2");
 
         // simple fixed display name string.
-        string IAnalogyDataProvider.OptionalTitle { get; set; }= "Clef EventSource";
+        string? IAnalogyDataProvider.OptionalTitle { get; set; }= "Clef EventSource";
 
         // We don't use any custom colours.
         bool IAnalogyDataProvider.UseCustomColors { get; set; }
